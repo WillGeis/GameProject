@@ -1,7 +1,8 @@
 @echo off
 echo Compiling project...
 
-g++ Main.cpp MainRenderer.cpp -IC:/mingw64/include -LC:/mingw64/lib -lfreeglut -lopengl32 -lgdi32 -o game.exe
+REM Compile all source files
+g++ App/Main.cpp Core/GameLoop.cpp Core/MainRenderer.cpp -IC:/mingw64/include -ICore -LC:/mingw64/lib -lfreeglut -lopengl32 -lgdi32 -lglu32 -o game.exe
 
 if %ERRORLEVEL% neq 0 (
     echo Build failed!
@@ -9,5 +10,5 @@ if %ERRORLEVEL% neq 0 (
     exit /b %ERRORLEVEL%
 )
 
-echo Build successful! Output: blank.exe
+echo Build successful! Output: game.exe
 pause
