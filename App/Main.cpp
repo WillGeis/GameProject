@@ -10,6 +10,6 @@ int items[10]; // array for item storage 10 is arbirary size
 
 int main(int argc, char** argv)
 {
-    mainLoop(argc, argv);
+    mainLoop();
     return 0;
 }
