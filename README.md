@@ -13,6 +13,7 @@ This project is a 2D platformer built from scratch without using a pre-existing 
 
 ## Project Structure
 
+```md
 GameProject/
 │
 ├─ Core/ # Core game logic and assets
@@ -42,6 +43,7 @@ GameProject/
 ├─ Build.bat # Builds the game
 │
 └─ README.md
+```
 
 ---
 
