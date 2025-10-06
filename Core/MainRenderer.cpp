@@ -1,49 +1,55 @@
-#include <iostream>
-#include <string>
-#include <windows.h>
-#include <math.h>
-#include <GL/glut.h>
-#define STB_IMAGE_IMPLEMENTATION
-#include "LoadTexture.h"
 #include "MainRenderer.h"
-#include "MainPlayer.h"
-#include "Gravity.h"
+#include "LoadTexture.h"
+#include <GL/glut.h>
+#include <iostream>
+#include <mutex>
+#include "GameLoop.h"
+#include "PlayerInputHandler.h"
+#include "Levels/FirstLevelRender.h"
 
-// Window dimensions
-const int WINDOW_WIDTH = 1920;
-const int WINDOW_HEIGHT = 1080;
 
-void (*playerRenderCallback)(float, float) = nullptr;
+// Window constants TODO: be able to change resolution at runtime
+extern const int WINDOW_WIDTH = 1920;
+extern const int WINDOW_HEIGHT = 1080;
 
-// Draw sprite in the center
-void display() {
-    glClear(GL_COLOR_BUFFER_BIT);
+// Texture for main character sprite
+GLuint characterSpriteTexture;
+const char* spritePath = "Sprites/testSprite.png"; //(TODO: make new player sprite)
 
-    // Call the modular render function if set
-    if (playerRenderCallback != nullptr) {
-        playerRenderCallback(playerX, playerY);
-    }
+static Player* activePlayer = nullptr;
 
-    // -------------------- Floor Renderer --------------------
-    glDisable(GL_TEXTURE_2D);
-    glColor3f(0.545f, 0.271f, 0.075f);
+// Texture Loader
+bool initPlayerTexture() {
+    return loadTexture(spritePath, characterSpriteTexture);
+}
 
-    int floorHeight = 150;
+// Player Renderer (I will likely put this in a separate class later but for now it's fine here)
+void mainPlayerRender(Player& player) {
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, characterSpriteTexture);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    const int SPRITE_WIDTH = 200;
+    const int SPRITE_HEIGHT = 200;
+    float halfW = SPRITE_WIDTH / 2.0f;
+    float halfH = SPRITE_HEIGHT / 2.0f;
+
     glBegin(GL_QUADS);
-        glVertex2f(0, 0);
-        glVertex2f(WINDOW_WIDTH, 0);
-        glVertex2f(WINDOW_WIDTH, floorHeight);
-        glVertex2f(0, floorHeight);
+        glTexCoord2f(0.0f, 1.0f); glVertex2f(player.x - halfW, player.y - halfH);
+        glTexCoord2f(1.0f, 1.0f); glVertex2f(player.x + halfW, player.y - halfH);
+        glTexCoord2f(1.0f, 0.0f); glVertex2f(player.x + halfW, player.y + halfH);
+        glTexCoord2f(0.0f, 0.0f); glVertex2f(player.x - halfW, player.y + halfH);
     glEnd();
 
-    // Reset color
-    glColor3f(1.0f, 1.0f, 1.0f);
-
-    glFlush();
+    glDisable(GL_BLEND);
+    glDisable(GL_TEXTURE_2D);
 }
 
 
-// Setup 2D projection
+
+// Projection
 void setupProjection() {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -52,35 +58,53 @@ void setupProjection() {
     glLoadIdentity();
 }
 
-void update() {
-    playerY = gravity(playerY);  // Apply gravity
-    glutPostRedisplay();         // Tell GLUT to redraw
+// Display
+void display() {
+    if (!activePlayer) return;
+    glClear(GL_COLOR_BUFFER_BIT);
+    glLoadIdentity();
+
+    renderFloor();
+
+    {
+        std::lock_guard<std::mutex> lock(playerMutex);
+        mainPlayerRender(*activePlayer);
+    }
+
+    glutSwapBuffers();
 }
 
-int mainRenderer() {
+// Entry
+int mainRenderer(Player& player) {
+    activePlayer = &player;
+
     int argc = 1;
-    char* argv[1] = { (char*)"app" };
+    char* argv[1] = {(char*)"app"};
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
     glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
     glutInitWindowPosition(0, 0);
     glutCreateWindow("Game Window");
+
+    glutKeyboardFunc(keyDown);
+    glutKeyboardUpFunc(keyUp);
+
+    // TODO: implement special key handling (arrow keys, etc)
+    //glutSpecialFunc(specialKeyDown);
+    //glutSpecialUpFunc(specialKeyUp);
+
 
     glClearColor(1,1,1,1);
     setupProjection();
 
     if (!initPlayerTexture()) {
-        std::cerr << "Failed to load character sprite!" << std::endl;
+        std::cerr << "Failed to load character sprite!\n";
         return -1;
     }
 
-    playerRenderCallback = mainPlayerRender;
-
     glutDisplayFunc(display);
-
-    glutIdleFunc(update);
-
+    glutIdleFunc([](){ glutPostRedisplay(); });
     glutMainLoop();
+
     return 0;
 }
-

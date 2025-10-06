@@ -6,7 +6,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-// Load texture from file
+// Load texture from file probably will be used in multiple places and need some updates for that.
 bool loadTexture(const char* path, GLuint& textureID) {
     int width, height, channels;
     unsigned char* image = stbi_load(path, &width, &height, &channels, STBI_rgb_alpha);
