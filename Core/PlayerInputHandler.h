@@ -11,11 +11,10 @@ enum class PlayerAction {
     OpenInventory
 };
 
-extern std::map<unsigned char, PlayerAction> keyBindings;
-extern std::map<unsigned char, bool> keyState;
-
 void keyDown(unsigned char key, int x, int y);
 void keyUp(unsigned char key, int x, int y);
 void handlePlayerInput(Player& player);
+
+bool isKeyPressed(unsigned char key);
 
 #endif

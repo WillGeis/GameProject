@@ -2,6 +2,8 @@
 #include <iostream>
 #include <GL/glut.h> // for GLUT key codes
 
+extern float dt; // delta time from GameLoop
+
 // Key-to-action mapping (can be modified at runtime, will have other functions later)
 std::map<unsigned char, PlayerAction> keyBindings = {
     {'a', PlayerAction::MoveLeft},
@@ -14,6 +16,10 @@ std::map<unsigned char, PlayerAction> keyBindings = {
 // Track which keys are currently pressed
 std::map<unsigned char, bool> keyState;
 
+bool isKeyPressed(unsigned char key) {
+    return keyState[key];
+}
+
 // GLUT key press/release callbacks
 void keyDown(unsigned char key, int x, int y) {
     keyState[key] = true;
@@ -21,19 +27,33 @@ void keyDown(unsigned char key, int x, int y) {
 
 void keyUp(unsigned char key, int x, int y) {
     keyState[key] = false;
+
+    switch (key) {
+        case 'a':
+            std::cout << "[Input] Stopping Left\n";
+            extern Player player;
+            player.stopLeft(dt);
+            break;
+        case 'd':
+            std::cout << "[Input] Stopping Right\n";
+            extern Player player;
+            player.stopRight(dt);
+            break;
+        default:
+            break;
+    }
 }
 
 // Framework for player input - add cases as I make more actions
 void handlePlayerInput(Player& player) {
     for (auto& [key, action] : keyBindings) {
         if (keyState[key]) {
-            std::cout << "Player Input: key='" << key << "' action=";
             switch (action) {
                 case PlayerAction::MoveLeft:
-                    player.x -= 5.0f;
+                    player.moveLeft(dt);
                     break;
                 case PlayerAction::MoveRight:
-                    player.x += 5.0f;
+                    player.moveRight(dt);
                     break;
                 case PlayerAction::Jump:
                     if (player.onGround) {

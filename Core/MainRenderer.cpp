@@ -4,6 +4,7 @@
 #include <iostream>
 #include <mutex>
 #include "GameLoop.h"
+#include "MainPlayer.h"
 #include "PlayerInputHandler.h"
 #include "Levels/FirstLevelRender.h"
 
@@ -31,10 +32,10 @@ void mainPlayerRender(Player& player) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    const int SPRITE_WIDTH = 200;
-    const int SPRITE_HEIGHT = 200;
-    float halfW = SPRITE_WIDTH / 2.0f;
-    float halfH = SPRITE_HEIGHT / 2.0f;
+    
+    float halfW = player.SPRITE_WIDTH / 2.0f;
+    float halfH = player.SPRITE_HEIGHT / 2.0f;
+
 
     glBegin(GL_QUADS);
         glTexCoord2f(0.0f, 1.0f); glVertex2f(player.x - halfW, player.y - halfH);
@@ -64,7 +65,7 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT);
     glLoadIdentity();
 
-    renderFloor();
+    renderFirstLevel();
 
     {
         std::lock_guard<std::mutex> lock(playerMutex);
