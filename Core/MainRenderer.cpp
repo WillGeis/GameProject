@@ -14,41 +14,75 @@ extern const int WINDOW_WIDTH = 1920;
 extern const int WINDOW_HEIGHT = 1080;
 
 // Texture for main character sprite
-GLuint characterSpriteTexture;
+GLuint characterSpriteTexture, runTexture1, runTexture2, jumpTexture;
 const char* spritePath = "Sprites/testSprite.png"; //(TODO: make new player sprite)
+const char* runPath1 = "Sprites/testSpriteRun1.png";
+const char* runPath2 = "Sprites/testSpriteRun2.png";
+const char* jumpPath = "Sprites/testSpriteJump.png";
 
 static Player* activePlayer = nullptr;
+static int frameCounter = 0;
 
 // Texture Loader
 bool initPlayerTexture() {
-    return loadTexture(spritePath, characterSpriteTexture);
+    bool ok = true;
+    ok &= loadTexture(spritePath, characterSpriteTexture);
+    ok &= loadTexture(runPath1, runTexture1);
+    ok &= loadTexture(runPath2, runTexture2);
+    ok &= loadTexture(jumpPath, jumpTexture);
+    return ok;
 }
 
 // Player Renderer (I will likely put this in a separate class later but for now it's fine here)
-void mainPlayerRender(Player& player) {
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, characterSpriteTexture);
+void renderPlayerSprite(const Player& player, int orientation, GLuint textureID) {
+    float halfW = player.halfWidth;
+    float halfH = player.halfHeight;
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_TEXTURE_2D);// enable textures
+    glEnable(GL_BLEND); // enable blending for transparency
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // standard alpha blend
 
-    
-    float halfW = player.SPRITE_WIDTH / 2.0f;
-    float halfH = player.SPRITE_HEIGHT / 2.0f;
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glColor3f(1.0f, 1.0f, 1.0f);
 
+    glPushMatrix();
+    glTranslatef(player.x, player.y, 0.0f);
+
+    if (orientation == -1 || orientation == -2) {
+        glScalef(-1.0f, 1.0f, 1.0f); // flip horizontally for left-facing sprite
+    }
 
     glBegin(GL_QUADS);
-        glTexCoord2f(0.0f, 1.0f); glVertex2f(player.x - halfW, player.y - halfH);
-        glTexCoord2f(1.0f, 1.0f); glVertex2f(player.x + halfW, player.y - halfH);
-        glTexCoord2f(1.0f, 0.0f); glVertex2f(player.x + halfW, player.y + halfH);
-        glTexCoord2f(0.0f, 0.0f); glVertex2f(player.x - halfW, player.y + halfH);
+        glTexCoord2f(0.0f, 1.0f); glVertex2f(-halfW, -halfH);
+        glTexCoord2f(1.0f, 1.0f); glVertex2f( halfW, -halfH);
+        glTexCoord2f(1.0f, 0.0f); glVertex2f( halfW,  halfH);
+        glTexCoord2f(0.0f, 0.0f); glVertex2f(-halfW,  halfH);
     glEnd();
 
-    glDisable(GL_BLEND);
+    glPopMatrix();
+
+    glDisable(GL_BLEND);// clean up state
     glDisable(GL_TEXTURE_2D);
 }
 
 
+void mainPlayerRender(Player& player) {
+    GLuint tex = characterSpriteTexture;
+
+    // Jumping takes precedence over running
+    if (!player.onGround) {
+        tex = jumpTexture;
+    } 
+    else if (player.orientation == 2 || player.orientation == -2) { // running right or left
+        frameCounter++;
+        if ((frameCounter / 10) % 2 == 0)
+            tex = runTexture1;
+        else
+            tex = runTexture2;
+    }
+
+    renderPlayerSprite(player, player.orientation, tex);
+}
 
 // Projection
 void setupProjection() {
@@ -89,13 +123,12 @@ int mainRenderer(Player& player) {
 
     glutKeyboardFunc(keyDown);
     glutKeyboardUpFunc(keyUp);
-
     // TODO: implement special key handling (arrow keys, etc)
     //glutSpecialFunc(specialKeyDown);
     //glutSpecialUpFunc(specialKeyUp);
 
 
-    glClearColor(1,1,1,1);
+    glClearColor(1, 1, 1, 1);
     setupProjection();
 
     if (!initPlayerTexture()) {
@@ -104,8 +137,10 @@ int mainRenderer(Player& player) {
     }
 
     glutDisplayFunc(display);
-    glutIdleFunc([](){ glutPostRedisplay(); });
+    glutIdleFunc([]() { glutPostRedisplay(); });
     glutMainLoop();
 
     return 0;
 }
+
+

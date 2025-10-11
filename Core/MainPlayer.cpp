@@ -1,4 +1,5 @@
 #include "MainPlayer.h"
+#include "MainRenderer.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -11,32 +12,38 @@
 
 
 void Player::moveLeft(float dt) {
+    orientation = -2; // moving left
     vx -= MOVE_ACCEL * dt;
     vx = std::clamp(vx, -MAX_MOVE_SPEED, MAX_MOVE_SPEED);
 }
 
 void Player::stopLeft(float dt) {
-    std::cout << "slowing" << std::endl;
-
-    if (vx < 0) {
+    if (vx < 0)
+    {
         vx += STOP_DECEL * dt;
         if (vx > (STOP_VELOCITY * -1))
         {
-            std::cout << "stopping" << std::endl;
+            orientation = -1; // facing left
             vx = 0.0f; // prevent overshoot
         }
     }
 }
 
 void Player::moveRight(float dt) {
+    orientation = 2; // moving right
     vx += MOVE_ACCEL * dt;
     vx = std::clamp(vx, -MAX_MOVE_SPEED, MAX_MOVE_SPEED);
 }
 
 void Player::stopRight(float dt) {
-    if (vx > 0) {
+    if (vx > 0)
+    {
         vx -= STOP_DECEL * dt;
-        if (vx < STOP_VELOCITY) vx = 0.0f;
+        if (vx < STOP_VELOCITY) 
+        {
+            orientation = 1; // facing right
+            vx = 0.0f;
+        }
     }
 }
 

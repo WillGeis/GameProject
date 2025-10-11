@@ -57,6 +57,7 @@ void handlePlayerInput(Player& player) {
                     break;
                 case PlayerAction::Jump:
                     if (player.onGround) {
+                        player.orientation = 0; // jumping
                         player.vy = 500.0f;
                         player.onGround = false;
                     }

@@ -19,6 +19,7 @@ void mainLoop()
     bool gameOver = false;
 
     // Init player
+    player.orientation = 1; // facing right
     player.x = 960.0f;
     player.y = 540.0f;
     player.vy = 0.0f;

@@ -6,6 +6,7 @@
 #include "WallMaker.h"  // for WALL struct
 
 struct Player {
+    int orientation; // 1 = right, 2 = movement right, -1 = left, -2 = movement left
     float x;
     float y;
     float vy = 0.0f;      // vertical velocity
